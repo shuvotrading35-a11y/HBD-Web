@@ -465,3 +465,161 @@ body{
   .wish.is-in .wish__heroWrap::before{ animation:none; opacity:.9; }
   .wish.is-in .wish__heroWrap::after{ animation:none; opacity:0; }
 }
+
+/* ============================================================
+   UPGRADE STYLES — Setup / Countdown / Share / Confetti / Secret
+   ============================================================ */
+
+/* --- SETUP SCREEN ----------------------------------------- */
+.setup{
+  position:fixed; inset:0; z-index:100;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(135% 110% at 50% 20%, #fff6ee 0%, #f9dfd4 55%, #f0c4b8 100%);
+  transition: opacity .5s ease, visibility .5s ease;
+}
+.setup.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+
+.setup__card{
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,200,210,.45);
+  border-radius:22px;
+  padding:32px 28px 28px;
+  width:min(88vw, 360px);
+  box-shadow:0 18px 48px -10px rgba(168,40,80,.18);
+  text-align:center;
+}
+.setup__label{
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:16px; font-weight:600; font-style:italic;
+  color:#9a4560; margin-bottom:10px; display:block;
+  text-align:left;
+}
+.setup__input{
+  width:100%; padding:11px 16px;
+  border:1.5px solid rgba(180,80,110,.22);
+  border-radius:12px; font-size:16px;
+  font-family:"Cormorant Garamond",Georgia,serif;
+  color:#6e3040; background:rgba(255,248,244,.9);
+  outline:none; transition:border-color .25s;
+}
+.setup__input:focus{ border-color:rgba(200,60,100,.5); }
+.setup__input[type="date"]{ color:#6e3040; cursor:pointer; }
+
+.theme-row{
+  display:flex; gap:12px; justify-content:center;
+  margin-top:4px;
+}
+.theme-btn{
+  width:44px; height:44px; border-radius:50%;
+  border:2.5px solid transparent;
+  font-size:20px; cursor:pointer;
+  background:rgba(255,248,244,.8);
+  transition:border-color .2s, transform .2s;
+}
+.theme-btn.active{ border-color:#d94070; transform:scale(1.15); }
+.theme-btn:hover{ transform:scale(1.1); }
+
+.setup__go{
+  margin-top:22px; width:100%;
+  padding:13px 0; border:none; border-radius:14px;
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:18px; font-weight:700; letter-spacing:.06em;
+  color:#fff;
+  background:linear-gradient(135deg,#e8527a,#c41f52);
+  box-shadow:0 8px 24px -6px rgba(180,30,70,.4);
+  cursor:pointer; transition:transform .18s, box-shadow .18s;
+}
+.setup__go:hover{ transform:translateY(-2px); box-shadow:0 12px 28px -6px rgba(180,30,70,.5); }
+.setup__go:active{ transform:translateY(0); }
+
+/* --- COUNTDOWN BANNER ------------------------------------- */
+.countdown-banner{
+  position:fixed; top:0; left:0; right:0; z-index:90;
+  padding:10px 20px;
+  background:rgba(255,248,244,.88);
+  backdrop-filter:blur(8px);
+  text-align:center;
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:15px; color:#9a4560;
+  border-bottom:1px solid rgba(200,100,130,.15);
+  box-shadow:0 2px 12px rgba(168,40,80,.08);
+}
+.countdown-banner strong{ color:#d43060; font-size:17px; }
+
+/* --- SECRET TOAST ----------------------------------------- */
+.secret-toast{
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
+  z-index:95; padding:12px 22px;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,180,200,.4);
+  border-radius:50px;
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:15px; color:#8a3555;
+  box-shadow:0 8px 28px -6px rgba(168,40,80,.2);
+  opacity:0; transition:opacity .4s ease, transform .4s ease;
+  white-space:nowrap;
+}
+.secret-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* --- SHARE FAB -------------------------------------------- */
+.share-fab{
+  position:absolute; right:20px; bottom:54px; z-index:7;
+  width:44px; height:44px; border-radius:50%;
+  border:none; cursor:pointer;
+  background:rgba(255,248,242,.78);
+  color:#8a4a5a;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 20px -6px rgba(120,20,50,.35);
+  backdrop-filter:blur(6px);
+  opacity:0; transform:translateY(8px);
+  transition:opacity .5s ease, transform .5s ease, background .2s;
+}
+.share-fab.is-shown{ opacity:1; transform:translateY(0); }
+.share-fab:hover{ background:rgba(255,252,248,.95); }
+
+/* --- SHARE PANEL ------------------------------------------ */
+.share-panel{
+  position:fixed; bottom:110px; right:16px; z-index:96;
+  display:flex; flex-direction:column; gap:10px;
+  align-items:flex-end;
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp{ from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+.share-btn{
+  padding:10px 18px; border:none; border-radius:50px;
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:15px; font-weight:600; cursor:pointer;
+  box-shadow:0 6px 18px -4px rgba(0,0,0,.15);
+  transition:transform .18s, box-shadow .18s;
+}
+.share-btn:hover{ transform:translateY(-2px); box-shadow:0 8px 22px -4px rgba(0,0,0,.2); }
+.share-btn--wa{   background:#25D366; color:#fff; }
+.share-btn--copy{ background:rgba(255,248,244,.95); color:#8a3555; border:1px solid rgba(200,100,130,.2); }
+.share-btn--close{ background:rgba(240,240,240,.9); color:#666; font-size:13px; padding:8px 14px; }
+
+/* --- CONFETTI CANVAS -------------------------------------- */
+.confetti-canvas{
+  position:fixed; inset:0; z-index:11;
+  pointer-events:none; width:100%; height:100%;
+}
+
+/* --- THEME VARIABLES -------------------------------------- */
+:root[data-theme="pink"]{
+  --heart-hi:#ffd9e4; --heart-mid:#ff6f97; --heart-deep:#d81e57; --heart-dark:#9d0f3e;
+  --rose-deep:#a80f43; --rose:#d4235c; --rose-lift:#ff5f86; --wine:#6e0a31;
+}
+:root[data-theme="blue"]{
+  --heart-hi:#d4eeff; --heart-mid:#5ba8ff; --heart-deep:#1a5cbf; --heart-dark:#0e3880;
+  --rose-deep:#0d3b8a; --rose:#1e5cbf; --rose-lift:#4a90ff; --wine:#082460;
+}
+:root[data-theme="purple"]{
+  --heart-hi:#ead4ff; --heart-mid:#a855f7; --heart-deep:#6b21a8; --heart-dark:#4a1575;
+  --rose-deep:#5b1a9a; --rose:#8b3ccf; --rose-lift:#c084fc; --wine:#3a0d65;
+}
+:root[data-theme="gold"]{
+  --heart-hi:#fff3d4; --heart-mid:#f4a626; --heart-deep:#c47a00; --heart-dark:#8a5500;
+  --rose-deep:#8a5500; --rose:#c47a00; --rose-lift:#f4a626; --wine:#5a3600;
+}
