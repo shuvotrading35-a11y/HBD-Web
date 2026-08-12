@@ -84,11 +84,11 @@ function hideSetup(){
   setupEl.classList.add('hide');
   setTimeout(()=>{
     setupEl.hidden = true;
-    // Now reveal the film scene
+    document.body.style.overflow = '';
+    // Reveal the film scene
     const scene = document.getElementById('mainScene');
     if(scene){
-      scene.style.visibility = 'visible';
-      scene.style.opacity = '1';
+      scene.style.display = 'block';
     }
   }, 520);
 }
@@ -97,7 +97,8 @@ function hideSetup(){
 if(isViewer){
   // Immediately show scene for viewer
   const scene = document.getElementById('mainScene');
-  if(scene){ scene.style.visibility='visible'; scene.style.opacity='1'; }
+  if(scene){ scene.style.display='block'; }
+  document.body.style.overflow = '';
   nameInput.value = urlName;
   if(urlDate) bdayInput.value = urlDate;
   const si = document.getElementById('secretInput');
