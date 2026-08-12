@@ -950,8 +950,14 @@ archery.addEventListener('pointercancel', endDraw);
 archery.addEventListener('keydown', (e) => { if (played) return; if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); autoFire(); } });
 
 function enter(){
+  // Make hero visible first so getBoundingClientRect works correctly
   gsap.set(hero, { autoAlpha: 1 });
+  // Reset archery to neutral before measuring
+  gsap.set(archery, { opacity: 1, scale: 1, x: 0, y: 0, rotation: 0 });
+  gsap.set(arrow,   { opacity: 1, x: 0, y: 0 });
+  // Now measure and position rig
   refreshRig(); setDraw(0);
+  // Then hide for animation
   gsap.set([eyebrow, hint], { opacity: 0, y: 14 });
   gsap.set(target, { opacity: 0, y: 10, scaleX: 0.9, scaleY: 0.9 });
   gsap.set(archery, { opacity: 0, scale: 0.85 });
@@ -1006,15 +1012,11 @@ if (reduceMotion){
   buildMotes();
   document.fonts && document.fonts.ready.then(() => {
     if(isViewer){
-      // Viewer: wait for DOM paint after CSS hides setup, then rig
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          resize();
-          refreshRig();
-          setDraw(0);
-          enter();
-        });
-      });
+      // Viewer: small delay so browser finishes layout after setup hidden
+      setTimeout(()=>{
+        resize();
+        enter();
+      }, 100);
     } else {
       resize();
       refreshRig();
