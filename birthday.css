@@ -646,3 +646,8 @@ body{
   line-height:1.6;
   font-size:15px;
 }
+
+/* Viewer mode — setup screen instantly hidden before JS loads */
+html.viewer-mode .setup{
+  display: none !important;
+}
