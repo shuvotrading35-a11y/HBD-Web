@@ -647,15 +647,9 @@ body{
   font-size:15px;
 }
 
-/* Viewer mode — setup screen instantly hidden before JS loads */
+/* Viewer mode — setup hidden until JS auto-submits */
 html.viewer-mode .setup{
-  display: none !important;
-}
-
-/* Viewer mode — setup out of flow completely */
-html.viewer-mode .setup{
-  position: fixed !important;
-  display: none !important;
-  visibility: hidden !important;
+  opacity: 0;
+  pointer-events: none;
 }
 

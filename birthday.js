@@ -85,10 +85,14 @@ function hideSetup(){
   setTimeout(()=>{ setupEl.hidden = true; }, 520);
 }
 
-/* — Viewer mode: skip setup, play directly — */
+/* — Viewer mode: pre-fill + auto-trigger same as sender — */
 if(isViewer){
-  personalise(urlName, urlDate);
-  hideSetup();
+  nameInput.value = urlName;
+  if(urlDate) bdayInput.value = urlDate;
+  const si = document.getElementById('secretInput');
+  if(si && urlMsg) si.value = urlMsg;
+  // Auto-trigger after fonts + layout ready
+  window._viewerAutoStart = true;
 } else {
   /* — Sender mode: show setup — */
   nameInput.value = localStorage.getItem('hbd-name') || '';
@@ -143,7 +147,14 @@ function startFilm(){
   hideSetup();
 }
 
-setupGo.addEventListener('click', generateLink);
+setupGo.addEventListener('click', ()=>{
+  if(window._viewerAutoStart){
+    // Viewer mode: skip link generation, go straight to film
+    startFilm();
+  } else {
+    generateLink();
+  }
+});
 nameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') bdayInput.focus(); });
 bdayInput.addEventListener('keydown', e=>{ if(e.key==='Enter') generateLink(); });
 
@@ -1019,24 +1030,18 @@ if (reduceMotion){
 } else {
   buildMotes();
   document.fonts && document.fonts.ready.then(() => {
-    if(isViewer){
-      // Viewer: small delay so browser finishes layout after setup hidden
-      setTimeout(()=>{
-        resize();
-        enter();
-      }, 100);
-    } else {
-      resize();
-      refreshRig();
-      setDraw(0);
+    resize();
+    refreshRig();
+    setDraw(0);
+    if(window._viewerAutoStart){
+      // Viewer: click the Go button to run exact same flow as sender
+      setupGo.click();
     }
   });
-  if(!isViewer){
-    // Sender: wait for setup confirm
-    setupGo.addEventListener('click', () => {
-      setTimeout(enter, 550);
-    }, { once: true });
-  }
+  // Sender + Viewer both use same click handler
+  setupGo.addEventListener('click', () => {
+    setTimeout(enter, 550);
+  }, { once: true });
   replay.addEventListener('click', resetAll);
 }
 
