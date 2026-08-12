@@ -13,10 +13,20 @@
 import gsap from 'gsap';
 
 /* ============================================================
-   1. THEME SYSTEM
+   URL-BASED PERSONALISATION
+   Sender:   opens site → fills name + date → gets shareable link
+   Receiver: opens ?to=NAME&date=YYYY-MM-DD → film plays directly
    ============================================================ */
-const THEMES = ['pink','blue','purple','gold'];
-let currentTheme = localStorage.getItem('hbd-theme') || 'pink';
+
+const params   = new URLSearchParams(location.search);
+const urlName  = params.get('to')   || '';
+const urlDate  = params.get('date') || '';
+const isViewer = !!urlName;   // true = received a link, skip setup
+
+/* ============================================================
+   THEME SYSTEM
+   ============================================================ */
+let currentTheme = params.get('theme') || localStorage.getItem('hbd-theme') || 'pink';
 
 function applyTheme(t){
   currentTheme = t;
@@ -27,59 +37,112 @@ function applyTheme(t){
   });
 }
 applyTheme(currentTheme);
-
 document.querySelectorAll('.theme-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> applyTheme(btn.dataset.theme));
 });
 
 /* ============================================================
-   2. SETUP SCREEN — Name + Birthday date + confirm
+   SETUP SCREEN
    ============================================================ */
 const setupEl   = document.getElementById('setup');
 const nameInput = document.getElementById('nameInput');
 const bdayInput = document.getElementById('bdayInput');
 const setupGo   = document.getElementById('setupGo');
 
-let userName = localStorage.getItem('hbd-name') || '';
-let bdayDate  = localStorage.getItem('hbd-date') || '';
+let userName = '';
+let bdayDate  = '';
 
-if(userName) nameInput.value = userName;
-if(bdayDate)  bdayInput.value = bdayDate;
+function buildShareURL(name, date, theme){
+  const base = location.origin + location.pathname;
+  const p = new URLSearchParams();
+  p.set('to', name);
+  if(date)  p.set('date', date);
+  if(theme && theme !== 'pink') p.set('theme', theme);
+  return base + '?' + p.toString();
+}
 
-function startFilm(){
-  userName = nameInput.value.trim() || 'তুমি';
-  bdayDate  = bdayInput.value;
-  localStorage.setItem('hbd-name', userName);
-  if(bdayDate) localStorage.setItem('hbd-date', bdayDate);
-
-  // Personalise wish text
-  document.getElementById('wHero').textContent = `Happy Birthday, ${userName}!`;
-  document.getElementById('kSub').textContent   = `to ${userName} — someone worth celebrating`;
-  document.getElementById('eyebrow').textContent = `a little something, for ${userName}`;
-
-  // Countdown
+function personalise(name, date){
+  userName = name || 'তুমি';
+  bdayDate  = date || '';
+  document.getElementById('wHero').textContent    = `Happy Birthday, ${userName}!`;
+  document.getElementById('kSub').textContent     = `to ${userName} — someone worth celebrating`;
+  document.getElementById('eyebrow').textContent  = `a little something, for ${userName}`;
+  document.getElementById('secretText').textContent = `🌸 ${userName}, তোমার জন্মদিন অনেক সুন্দর হোক!`;
   if(bdayDate) showCountdown(bdayDate);
+}
 
-  // Secret message personalised
-  document.getElementById('secretText').textContent =
-    `🌸 ${userName}, তোমার জন্মদিন অনেক সুন্দর হোক!`;
-
+function hideSetup(){
   setupEl.classList.add('hide');
   setTimeout(()=>{ setupEl.hidden = true; }, 520);
 }
 
-setupGo.addEventListener('click', startFilm);
+/* — Viewer mode: skip setup, play directly — */
+if(isViewer){
+  personalise(urlName, urlDate);
+  hideSetup();
+} else {
+  /* — Sender mode: show setup — */
+  nameInput.value = localStorage.getItem('hbd-name') || '';
+  bdayInput.value = localStorage.getItem('hbd-date') || '';
+}
+
+let linkGenerated = false;
+
+function generateLink(){
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); nameInput.style.border='1.5px solid #e03060'; return; }
+  nameInput.style.border='';
+  const date  = bdayInput.value;
+  const link  = buildShareURL(name, date, currentTheme);
+
+  // Show preview
+  const preview  = document.getElementById('linkPreview');
+  const linkBox  = document.getElementById('linkBox');
+  const previewWA   = document.getElementById('previewWA');
+  const previewCopy = document.getElementById('previewCopy');
+
+  linkBox.textContent = link;
+  preview.hidden = false;
+  linkGenerated = true;
+
+  // Save
+  localStorage.setItem('hbd-name', name);
+  if(date) localStorage.setItem('hbd-date', date);
+  userName = name; bdayDate = date;
+  personalise(name, date);
+
+  // Change button to "Film দেখো"
+  setupGo.textContent = 'Film দেখো 🎬';
+  setupGo.onclick = startFilm;
+
+  previewWA.onclick = ()=>{
+    const msg = `🎂 ${name}-এর জন্য একটা বিশেষ Birthday Film! 🌸\n${link}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+  };
+  previewCopy.onclick = ()=>{
+    navigator.clipboard.writeText(link).then(()=>{
+      previewCopy.textContent = '✅ কপি!';
+      setTimeout(()=>{ previewCopy.textContent = 'কপি 🔗'; }, 2000);
+    });
+  };
+}
+
+function startFilm(){
+  hideSetup();
+}
+
+setupGo.addEventListener('click', generateLink);
 nameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') bdayInput.focus(); });
-bdayInput.addEventListener('keydown', e=>{ if(e.key==='Enter') startFilm(); });
+bdayInput.addEventListener('keydown', e=>{ if(e.key==='Enter') generateLink(); });
 
 /* ============================================================
-   3. COUNTDOWN BANNER
+   COUNTDOWN BANNER
    ============================================================ */
 function showCountdown(dateStr){
-  const banner  = document.getElementById('countdownBanner');
-  const cdDays  = document.getElementById('cdDays');
-  const today   = new Date();
-  const parts   = dateStr.split('-');
+  const banner = document.getElementById('countdownBanner');
+  const cdDays = document.getElementById('cdDays');
+  const today  = new Date();
+  const parts  = dateStr.split('-');
   let next = new Date(today.getFullYear(), +parts[1]-1, +parts[2]);
   if(next <= today) next.setFullYear(today.getFullYear()+1);
   const diff = Math.ceil((next - today)/(1000*60*60*24));
@@ -90,6 +153,7 @@ function showCountdown(dateStr){
   }
   banner.hidden = false;
 }
+
 
 /* ============================================================
    4. WEB AUDIO SOUND ENGINE
@@ -280,12 +344,14 @@ shareFab.addEventListener('click',()=>{
 shareClose.addEventListener('click',()=>{ sharePanel.hidden = true; });
 
 shareWA.addEventListener('click',()=>{
-  const msg = `🎂 ${userName}-এর জন্য একটা বিশেষ Birthday Film! 🌸\n${location.href}`;
+  const link = buildShareURL(userName, bdayDate, currentTheme);
+  const msg = `🎂 ${userName}-এর জন্য একটা বিশেষ Birthday Film! 🌸\n${link}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
 });
 
 shareCopy.addEventListener('click',()=>{
-  navigator.clipboard.writeText(location.href).then(()=>{
+  const link = buildShareURL(userName, bdayDate, currentTheme);
+  navigator.clipboard.writeText(link).then(()=>{
     shareCopy.textContent = '✅ কপি হয়েছে!';
     setTimeout(()=>{ shareCopy.textContent = 'লিঙ্ক কপি 🔗'; }, 2000);
   });
@@ -923,11 +989,15 @@ if (reduceMotion){
 } else {
   buildMotes();
   document.fonts && document.fonts.ready.then(() => { refreshRig(); setDraw(0); });
-  // Don't auto-enter — wait for setup screen confirm
-  setupGo.addEventListener('click', () => {
-    // enter() is called after setup hides
-    setTimeout(enter, 550);
-  }, { once: true });
+  if(isViewer){
+    // Viewer: setup already hidden, start film directly
+    setTimeout(enter, 300);
+  } else {
+    // Sender: wait for setup confirm
+    setupGo.addEventListener('click', () => {
+      setTimeout(enter, 550);
+    }, { once: true });
+  }
   replay.addEventListener('click', resetAll);
 }
 
