@@ -639,3 +639,10 @@ body{
   overflow:hidden;
   text-overflow:ellipsis;
 }
+
+/* --- SETUP TEXTAREA --------------------------------------- */
+.setup__textarea{
+  resize:none;
+  line-height:1.6;
+  font-size:15px;
+}

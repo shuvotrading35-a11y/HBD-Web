@@ -21,6 +21,7 @@ import gsap from 'gsap';
 const params   = new URLSearchParams(location.search);
 const urlName  = params.get('to')   || '';
 const urlDate  = params.get('date') || '';
+const urlMsg   = params.get('msg')  || '';
 const isViewer = !!urlName;   // true = received a link, skip setup
 
 /* ============================================================
@@ -52,12 +53,13 @@ const setupGo   = document.getElementById('setupGo');
 let userName = '';
 let bdayDate  = '';
 
-function buildShareURL(name, date, theme){
+function buildShareURL(name, date, theme, secret){
   const base = location.origin + location.pathname;
   const p = new URLSearchParams();
   p.set('to', name);
-  if(date)  p.set('date', date);
+  if(date)   p.set('date', date);
   if(theme && theme !== 'pink') p.set('theme', theme);
+  if(secret) p.set('msg', secret);
   return base + '?' + p.toString();
 }
 
@@ -67,7 +69,14 @@ function personalise(name, date){
   document.getElementById('wHero').textContent    = `Happy Birthday, ${userName}!`;
   document.getElementById('kSub').textContent     = `to ${userName} — someone worth celebrating`;
   document.getElementById('eyebrow').textContent  = `a little something, for ${userName}`;
-  document.getElementById('secretText').textContent = `🌸 ${userName}, তোমার জন্মদিন অনেক সুন্দর হোক!`;
+  // secret message: URL msg > input field > default
+  const secretVal = urlMsg
+    || (document.getElementById('secretInput')?.value || '').trim()
+    || `🌸 ${userName}, তোমার জন্মদিন অনেক সুন্দর হোক!`;
+  document.getElementById('secretText').textContent = secretVal;
+  if(urlMsg || (document.getElementById('secretInput')?.value||'').trim()){
+    SECRETS = [secretVal];
+  }
   if(bdayDate) showCountdown(bdayDate);
 }
 
@@ -92,8 +101,11 @@ function generateLink(){
   const name = nameInput.value.trim();
   if(!name){ nameInput.focus(); nameInput.style.border='1.5px solid #e03060'; return; }
   nameInput.style.border='';
-  const date  = bdayInput.value;
-  const link  = buildShareURL(name, date, currentTheme);
+  const date   = bdayInput.value;
+  const secret = (document.getElementById('secretInput')?.value || '').trim();
+  const link   = buildShareURL(name, date, currentTheme, secret);
+  // Update SECRETS for own preview
+  if(secret) SECRETS = [secret];
 
   // Show preview
   const preview  = document.getElementById('linkPreview');
@@ -297,13 +309,17 @@ function launchConfetti(){
    6. SECRET MESSAGE — tap tree canvas in Act 4
    ============================================================ */
 const secretToast = document.getElementById('secretToast');
-const SECRETS = [
+const DEFAULT_SECRETS = [
   '🌸 তোমার জীবন ফুলের মতো সুন্দর হোক!',
   '💖 ভালোবাসা আর সুখ সবসময় তোমার সাথে থাকুক!',
   '✨ তোমার স্বপ্ন পূরণ হোক এই বছর!',
   '🎂 আরও একটা দারুণ বছর শুরু হোক!',
   '🌟 তুমি অনেক বিশেষ একজন মানুষ!',
 ];
+// URL এ ?msg= থাকলে সেটাই দেখাবে, না হলে default list
+let SECRETS = urlMsg
+  ? [urlMsg]
+  : DEFAULT_SECRETS;
 let secretIdx = 0;
 let secretTimer = null;
 
