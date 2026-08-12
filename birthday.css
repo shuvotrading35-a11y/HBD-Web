@@ -651,3 +651,11 @@ body{
 html.viewer-mode .setup{
   display: none !important;
 }
+
+/* Viewer mode — setup out of flow completely */
+html.viewer-mode .setup{
+  position: fixed !important;
+  display: none !important;
+  visibility: hidden !important;
+}
+

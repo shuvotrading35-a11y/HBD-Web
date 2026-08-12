@@ -1005,12 +1005,20 @@ if (reduceMotion){
 } else {
   buildMotes();
   document.fonts && document.fonts.ready.then(() => {
-    resize();         // canvas + rig recalculate after fonts loaded
-    refreshRig();
-    setDraw(0);
     if(isViewer){
-      // Viewer: setup hidden, play directly
-      enter();
+      // Viewer: wait for DOM paint after CSS hides setup, then rig
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          resize();
+          refreshRig();
+          setDraw(0);
+          enter();
+        });
+      });
+    } else {
+      resize();
+      refreshRig();
+      setDraw(0);
     }
   });
   if(!isViewer){
