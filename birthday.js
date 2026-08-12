@@ -1004,11 +1004,16 @@ if (reduceMotion){
   drawFinal();
 } else {
   buildMotes();
-  document.fonts && document.fonts.ready.then(() => { refreshRig(); setDraw(0); });
-  if(isViewer){
-    // Viewer: setup already hidden, start film directly
-    setTimeout(enter, 300);
-  } else {
+  document.fonts && document.fonts.ready.then(() => {
+    resize();         // canvas + rig recalculate after fonts loaded
+    refreshRig();
+    setDraw(0);
+    if(isViewer){
+      // Viewer: setup hidden, play directly
+      enter();
+    }
+  });
+  if(!isViewer){
     // Sender: wait for setup confirm
     setupGo.addEventListener('click', () => {
       setTimeout(enter, 550);
