@@ -776,25 +776,39 @@ function refreshRig(){
   const aimRad = Math.atan2(heartX - gripX, gripY - heartY);
   pullUX = -Math.sin(aimRad); pullUY = Math.cos(aimRad);
   nockProxy.val = REST_NOCK; applyNock();
-  gsap.set(archery, { rotation: 0, scale: 1, x: 0, y: 0 });
-  archery.style.left = '0px'; archery.style.top = '0px';
-  gsap.set(arrow, { x: 0, y: 0 });
-  const aR = archery.getBoundingClientRect();
-  const bR = bow.getBoundingClientRect();
-  const sR = serving.getBoundingClientRect();
-  const rR = arrow.getBoundingClientRect();
-  svgScale = bR.width / 460;
-  const gripLX = (bR.left - aR.left) + 0.5 * bR.width;
-  const gripLY = (bR.top  - aR.top ) + (240 / 300) * bR.height;
-  const nockLX = (sR.left - aR.left) + 0.5 * sR.width;
-  const nockLY = (sR.top  - aR.top ) + 0.5 * sR.height;
-  arrowBaseX = nockLX - ((rR.left - aR.left) + 0.5 * rR.width);
-  arrowBaseY = nockLY - ((rR.top  - aR.top ) + (205 / 220) * rR.height);
+
+  // Pure math — no getBoundingClientRect needed
+  // bow CSS width: clamp(100px, 18vw, 168px)
+  const bowW = Math.min(Math.max(W * 0.18, 100), 168);
+  const bowH = bowW * (300 / 460);   // viewBox aspect ratio
+  svgScale   = bowW / 460;
+
+  // In viewBox coords: grip=230,240  nock(serving)=230,96
+  const gripLX = bowW * 0.5;                   // grip center-x in archery local
+  const gripLY = bowH * (240 / 300);            // grip center-y
+  const nockLX = bowW * 0.5;                   // nock center-x
+  const nockLY = bowH * (96  / 300);            // nock center-y
+
+  // arrow: width = 17.5% of bowW, viewBox 64x220
+  const arrowW = bowW * 0.175;
+  const arrowH = arrowW * (220 / 64);
+  // tail of arrow (fletch bottom) = arrowH * (200/220)
+  // nock sits at arrowH * (200/220) from top when arrow y=0
+  arrowBaseX = nockLX - arrowW * 0.5;
+  arrowBaseY = nockLY - arrowH * (200 / 220);
+
+  // Position archery so gripLX,gripLY lands at gripX,gripY
   archery.style.left = (gripX - gripLX) + 'px';
   archery.style.top  = (gripY - gripLY) + 'px';
-  gsap.set(archery, { transformOrigin: `${gripLX}px ${gripLY}px`, rotation: aimRad * 180 / Math.PI });
+
+  gsap.set(archery, {
+    rotation: 0, scale: 1, x: 0, y: 0,
+    transformOrigin: `${gripLX}px ${gripLY}px`
+  });
+  gsap.set(archery, { rotation: aimRad * 180 / Math.PI });
   gsap.set(arrow, { x: arrowBaseX, y: arrowBaseY });
-  maxDraw = Math.min(bR.height * 0.72, H * 0.16, 132);
+
+  maxDraw = Math.min(bowH * 0.72, H * 0.16, 132);
   curDraw = 0;
 }
 
@@ -950,14 +964,8 @@ archery.addEventListener('pointercancel', endDraw);
 archery.addEventListener('keydown', (e) => { if (played) return; if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); autoFire(); } });
 
 function enter(){
-  // Make hero visible first so getBoundingClientRect works correctly
   gsap.set(hero, { autoAlpha: 1 });
-  // Reset archery to neutral before measuring
-  gsap.set(archery, { opacity: 1, scale: 1, x: 0, y: 0, rotation: 0 });
-  gsap.set(arrow,   { opacity: 1, x: 0, y: 0 });
-  // Now measure and position rig
   refreshRig(); setDraw(0);
-  // Then hide for animation
   gsap.set([eyebrow, hint], { opacity: 0, y: 14 });
   gsap.set(target, { opacity: 0, y: 10, scaleX: 0.9, scaleY: 0.9 });
   gsap.set(archery, { opacity: 0, scale: 0.85 });
