@@ -1027,8 +1027,11 @@ function resetAll(){
 
 function resize(){
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = canvas.clientWidth; H = canvas.clientHeight;
+  // Use viewport size — canvas may be display:none initially
+  W = window.innerWidth; H = window.innerHeight;
   canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   buildSprites(); buildScene();
   if (reduceMotion){ drawFinal(); return; }
