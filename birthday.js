@@ -794,7 +794,6 @@ const nockProxy = { val: REST_NOCK };
 function applyNock(){ const y = nockProxy.val; strL.setAttribute('y2', y); strR.setAttribute('y2', y); serving.setAttribute('cy', y); }
 
 function refreshRig(){
-  // Use viewport dimensions — hero is always full viewport
   const VW = window.innerWidth;
   const VH = window.innerHeight;
 
@@ -804,28 +803,44 @@ function refreshRig(){
   pullUX = -Math.sin(aimRad); pullUY = Math.cos(aimRad);
   nockProxy.val = REST_NOCK; applyNock();
 
-  // bow CSS: clamp(100px, 18vw, 168px)
-  const bowW = Math.min(Math.max(VW * 0.18, 100), 168);
-  const bowH = bowW * (300 / 460);
-  svgScale   = bowW / 460;
+  // Try getBoundingClientRect first (accurate when visible)
+  // Fall back to pure math when element is hidden
+  const aR = archery.getBoundingClientRect();
+  const bR = bow.getBoundingClientRect();
+  const sR = serving.getBoundingClientRect();
+  const rR = arrow.getBoundingClientRect();
 
-  // viewBox: grip at (230,240), nock at (230,96) out of 460x300
-  const gripLX = bowW * (230 / 460);
-  const gripLY = bowH * (240 / 300);
-  const nockLX = bowW * (230 / 460);
-  const nockLY = bowH * (96  / 300);
+  let gripLX, gripLY, nockLX, nockLY, arrowW, arrowH;
 
-  // arrow CSS width = 17.5% of archery width, viewBox 64x220
-  const arrowW = bowW * 0.175;
-  const arrowH = arrowW * (220 / 64);
-  // fletch bottom at 205/220 of arrowH — this sits at nock
-  arrowBaseX = nockLX - arrowW * (32 / 64);
-  arrowBaseY = nockLY - arrowH * (205 / 220);
+  if(bR.width > 0){
+    // Element is visible — use accurate measurements
+    svgScale = bR.width / 460;
+    gripLX = (bR.left - aR.left) + 0.5 * bR.width;
+    gripLY = (bR.top  - aR.top ) + (240 / 300) * bR.height;
+    nockLX = (sR.left - aR.left) + 0.5 * sR.width;
+    nockLY = (sR.top  - aR.top ) + 0.5 * sR.height;
+    arrowBaseX = nockLX - ((rR.left - aR.left) + 0.5 * rR.width);
+    arrowBaseY = nockLY - ((rR.top  - aR.top ) + (205 / 220) * rR.height);
+    maxDraw = Math.min(bR.height * 0.72, VH * 0.16, 132);
+  } else {
+    // Element hidden — pure math fallback
+    const bowW = Math.min(Math.max(VW * 0.18, 100), 168);
+    const bowH = bowW * (300 / 460);
+    svgScale = bowW / 460;
+    gripLX = bowW * (230 / 460);
+    gripLY = bowH * (240 / 300);
+    nockLX = bowW * (230 / 460);
+    nockLY = bowH * (96  / 300);
+    arrowW = bowW * 0.175;
+    arrowH = arrowW * (220 / 64);
+    arrowBaseX = nockLX - arrowW * 0.5;
+    arrowBaseY = nockLY - arrowH * (205 / 220);
+    archery.style.width = bowW + 'px';
+    maxDraw = Math.min(bowH * 0.72, VH * 0.16, 132);
+  }
 
-  // Place archery element so its grip lands at gripX, gripY
   archery.style.left = (gripX - gripLX) + 'px';
   archery.style.top  = (gripY - gripLY) + 'px';
-  archery.style.width = bowW + 'px';
 
   gsap.set(archery, {
     rotation: 0, scale: 1, x: 0, y: 0,
@@ -833,8 +848,6 @@ function refreshRig(){
   });
   gsap.set(archery, { rotation: aimRad * 180 / Math.PI });
   gsap.set(arrow, { x: arrowBaseX, y: arrowBaseY });
-
-  maxDraw = Math.min(bowH * 0.72, VH * 0.16, 132);
   curDraw = 0;
 }
 
@@ -992,7 +1005,13 @@ archery.addEventListener('keydown', (e) => { if (played) return; if (e.key === '
 
 function enter(){
   gsap.set(hero, { autoAlpha: 1 });
+  // First call with math fallback, then re-measure after paint
   refreshRig(); setDraw(0);
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      refreshRig(); setDraw(0);
+    });
+  });
   gsap.set([eyebrow, hint], { opacity: 0, y: 14 });
   gsap.set(target, { opacity: 0, y: 10, scaleX: 0.9, scaleY: 0.9 });
   gsap.set(archery, { opacity: 0, scale: 0.85 });
