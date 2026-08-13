@@ -794,35 +794,38 @@ const nockProxy = { val: REST_NOCK };
 function applyNock(){ const y = nockProxy.val; strL.setAttribute('y2', y); strR.setAttribute('y2', y); serving.setAttribute('cy', y); }
 
 function refreshRig(){
-  const gripX = W * 0.24, gripY = H * 0.76;
-  const heartX = W * 0.5, heartY = H * 0.33;
+  // Use viewport dimensions — hero is always full viewport
+  const VW = window.innerWidth;
+  const VH = window.innerHeight;
+
+  const gripX = VW * 0.24, gripY = VH * 0.76;
+  const heartX = VW * 0.5, heartY = VH * 0.33;
   const aimRad = Math.atan2(heartX - gripX, gripY - heartY);
   pullUX = -Math.sin(aimRad); pullUY = Math.cos(aimRad);
   nockProxy.val = REST_NOCK; applyNock();
 
-  // Pure math — no getBoundingClientRect needed
-  // bow CSS width: clamp(100px, 18vw, 168px)
-  const bowW = Math.min(Math.max(W * 0.18, 100), 168);
-  const bowH = bowW * (300 / 460);   // viewBox aspect ratio
+  // bow CSS: clamp(100px, 18vw, 168px)
+  const bowW = Math.min(Math.max(VW * 0.18, 100), 168);
+  const bowH = bowW * (300 / 460);
   svgScale   = bowW / 460;
 
-  // In viewBox coords: grip=230,240  nock(serving)=230,96
-  const gripLX = bowW * 0.5;                   // grip center-x in archery local
-  const gripLY = bowH * (240 / 300);            // grip center-y
-  const nockLX = bowW * 0.5;                   // nock center-x
-  const nockLY = bowH * (96  / 300);            // nock center-y
+  // viewBox: grip at (230,240), nock at (230,96) out of 460x300
+  const gripLX = bowW * (230 / 460);
+  const gripLY = bowH * (240 / 300);
+  const nockLX = bowW * (230 / 460);
+  const nockLY = bowH * (96  / 300);
 
-  // arrow: width = 17.5% of bowW, viewBox 64x220
+  // arrow CSS width = 17.5% of archery width, viewBox 64x220
   const arrowW = bowW * 0.175;
   const arrowH = arrowW * (220 / 64);
-  // tail of arrow (fletch bottom) = arrowH * (200/220)
-  // nock sits at arrowH * (200/220) from top when arrow y=0
-  arrowBaseX = nockLX - arrowW * 0.5;
-  arrowBaseY = nockLY - arrowH * (200 / 220);
+  // fletch bottom at 205/220 of arrowH — this sits at nock
+  arrowBaseX = nockLX - arrowW * (32 / 64);
+  arrowBaseY = nockLY - arrowH * (205 / 220);
 
-  // Position archery so gripLX,gripLY lands at gripX,gripY
+  // Place archery element so its grip lands at gripX, gripY
   archery.style.left = (gripX - gripLX) + 'px';
   archery.style.top  = (gripY - gripLY) + 'px';
+  archery.style.width = bowW + 'px';
 
   gsap.set(archery, {
     rotation: 0, scale: 1, x: 0, y: 0,
@@ -831,7 +834,7 @@ function refreshRig(){
   gsap.set(archery, { rotation: aimRad * 180 / Math.PI });
   gsap.set(arrow, { x: arrowBaseX, y: arrowBaseY });
 
-  maxDraw = Math.min(bowH * 0.72, H * 0.16, 132);
+  maxDraw = Math.min(bowH * 0.72, VH * 0.16, 132);
   curDraw = 0;
 }
 
@@ -880,16 +883,17 @@ function burstHearts(){
 }
 
 function shotGeom(){
+  const VW = window.innerWidth, VH = window.innerHeight;
   const tipR = tip.getBoundingClientRect();
   const tRect = target.getBoundingClientRect();
   const tipX = tipR.left + tipR.width / 2, tipY = tipR.top + tipR.height / 2;
   const tcx = tRect.left + tRect.width / 2, tcy = tRect.top + tRect.height / 2;
   const flightDist = Math.hypot(tcx - tipX, tcy - tipY);
-  const fallPx = Math.min(H * 0.26, H - tcy - tRect.height * 0.4);
+  const fallPx = Math.min(VH * 0.26, VH - tcy - tRect.height * 0.4);
   const impactX = tcx, impactY = tcy + fallPx;
-  const distC = Math.hypot(Math.max(impactX, W - impactX), Math.max(impactY, H - impactY));
-  const reach = Math.hypot(W / 2, H / 2);
-  return { arrowStartY: arrowBaseY + curDraw, arrowFlyY: arrowBaseY + curDraw - flightDist, drawnNock: REST_NOCK + curDraw / svgScale, fallPx, fx: impactX - W / 2, fy: impactY - H / 2, floodScale: (distC * 1.12) / 70, bloomScale: (reach * 1.2) / 30 };
+  const distC = Math.hypot(Math.max(impactX, VW - impactX), Math.max(impactY, VH - impactY));
+  const reach = Math.hypot(VW / 2, VH / 2);
+  return { arrowStartY: arrowBaseY + curDraw, arrowFlyY: arrowBaseY + curDraw - flightDist, drawnNock: REST_NOCK + curDraw / svgScale, fallPx, fx: impactX - VW / 2, fy: impactY - VH / 2, floodScale: (distC * 1.12) / 70, bloomScale: (reach * 1.2) / 30 };
 }
 
 let filmTL = null;
