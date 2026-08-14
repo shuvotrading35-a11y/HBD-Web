@@ -157,6 +157,7 @@ function generateLink(){
 
 function startFilm(){
   hideSetup();
+  setTimeout(enter, 600);
 }
 
 setupGo.addEventListener('click', ()=>{
@@ -824,7 +825,8 @@ function refreshRig(){
     maxDraw = Math.min(bR.height * 0.72, VH * 0.16, 132);
   } else {
     // Element hidden — pure math fallback
-    const bowW = Math.min(Math.max(VW * 0.18, 100), 168);
+    // Match CSS: clamp(160px, 42vw, 260px)
+    const bowW = Math.min(Math.max(VW * 0.42, 160), 260);
     const bowH = bowW * (300 / 460);
     svgScale = bowW / 460;
     gripLX = bowW * (230 / 460);
@@ -1005,24 +1007,24 @@ archery.addEventListener('keydown', (e) => { if (played) return; if (e.key === '
 
 function enter(){
   gsap.set(hero, { autoAlpha: 1 });
-  // First call with math fallback, then re-measure after paint
-  refreshRig(); setDraw(0);
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      refreshRig(); setDraw(0);
-    });
-  });
+  // Hide elements first, then measure after 2 frames
   gsap.set([eyebrow, hint], { opacity: 0, y: 14 });
   gsap.set(target, { opacity: 0, y: 10, scaleX: 0.9, scaleY: 0.9 });
-  gsap.set(archery, { opacity: 0, scale: 0.85 });
+  gsap.set(archery, { opacity: 1, scale: 1 }); // keep visible for measurement
   gsap.set(heartGlow, { opacity: 0, scale: 1 });
   gsap.set(arrow, { opacity: 1 });
-  const tl = gsap.timeline({ onComplete: startBeat });
-  tl.to(target,   { opacity: 1, y: 0, scaleX: 1, scaleY: 1, duration: 0.8, ease: 'power3.out' }, 0.1)
-    .to(heartGlow,{ opacity: 0.7, duration: 0.8, ease: 'power2.out' }, 0.2)
-    .to(archery,  { opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out' }, 0.28)
-    .to(eyebrow,  { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.4)
-    .to(hint,     { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.7);
+  // Measure after browser paints hero visible
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    refreshRig(); setDraw(0);
+    // Now hide bow for entry animation
+    gsap.set(archery, { opacity: 0, scale: 0.85 });
+    const tl = gsap.timeline({ onComplete: startBeat });
+    tl.to(target,   { opacity: 1, y: 0, scaleX: 1, scaleY: 1, duration: 0.8, ease: 'power3.out' }, 0.1)
+      .to(heartGlow,{ opacity: 0.7, duration: 0.8, ease: 'power2.out' }, 0.2)
+      .to(archery,  { opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out' }, 0.28)
+      .to(eyebrow,  { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.4)
+      .to(hint,     { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.7);
+  }));
 }
 
 function armReplay(){
@@ -1069,17 +1071,12 @@ if (reduceMotion){
   buildMotes();
   document.fonts && document.fonts.ready.then(() => {
     resize();
-    refreshRig();
-    setDraw(0);
     if(window._viewerAutoStart){
-      // Viewer: click the Go button to run exact same flow as sender
-      setupGo.click();
+      // Viewer: auto start film directly
+      startFilm();
+      setTimeout(enter, 600);
     }
   });
-  // Sender + Viewer both use same click handler
-  setupGo.addEventListener('click', () => {
-    setTimeout(enter, 550);
-  }, { once: true });
   replay.addEventListener('click', resetAll);
 }
 
