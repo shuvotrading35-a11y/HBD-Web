@@ -797,8 +797,8 @@ function refreshRig(){
   const VW = window.innerWidth;
   const VH = window.innerHeight;
 
-  const gripX = VW * 0.24, gripY = VH * 0.76;
-  const heartX = VW * 0.5, heartY = VH * 0.33;
+  const gripX = VW * 0.30, gripY = VH * 0.80;
+  const heartX = VW * 0.5, heartY = VH * 0.35;
   const aimRad = Math.atan2(heartX - gripX, gripY - heartY);
   pullUX = -Math.sin(aimRad); pullUY = Math.cos(aimRad);
   nockProxy.val = REST_NOCK; applyNock();

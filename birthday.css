@@ -140,10 +140,10 @@ body{
    JS from measured geometry; everything below is in the rig's own space. */
 .archery{
   position:absolute; top:0; left:0;    /* JS sets left/top so the grip anchors */
-  width:clamp(100px, 18vw, 168px);     /* smaller, daintier bow — delicate against the heart */
+  width:clamp(160px, 42vw, 260px);     /* bigger bow — easier to tap on mobile */
   cursor:grab;
   -webkit-tap-highlight-color:transparent;
-  touch-action:none;                   /* we own the drag gesture */
+  touch-action:none;
   will-change:transform;
 }
 .archery:active{ cursor:grabbing; }
